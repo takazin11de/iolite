@@ -1,0 +1,2307 @@
+
+#define global ctype azAZ(%1) ((%1)==limit((%1),'a','z'))||((%1)==limit((%1),'A','Z'))
+#define global ctype afAF(%1) ((%1)==limit((%1),'a','f'))||((%1)==limit((%1),'A','F'))
+#define global ctype afAF2d(%1) (((%1)==limit((%1),'a','f')))*((%1)-'a') + (((%1)==limit((%1),'A','F'))*((%1)-'A') +0xA)
+#define global ctype zn(%1) ((%1)==limit((%1),'0','9'))
+
+
+#uselib "kernel32.dll"
+#cfunc global IsDBCSLeadByteEx "IsDBCSLeadByteEx" int,int
+#module
+#deffunc aaaaiiii
+dialog IsDBCSLeadByteEx(0,'あ')
+return
+#global
+
+//aaaaiiii
+
+
+
+//dialog IsDBCSLeadByteEx(0,'あ')
+//	#runtime "hsp3cl"
+//	#packopt type 0
+//	#packopt name cmp
+//	#packopt runtime "hsp3cl.hrt"
+
+chdir dir_exe
+
+dialog "il",16,""
+if stat!=1{
+	dialog "ファイル選択不正"
+}
+
+
+filename=refstr//getpath(dir_cmdline,8)
+while 1
+	data=peek(filename,0)
+	if data==' '||data='\t'{
+		filename=strmid(filename,1,strlen(filename)-1)
+	}else:_break
+wend
+
+exist filename
+filesize=strsize
+outfilename=getpath(filename,1)+".mdl"
+ocount=0
+tdata=0
+bsave outfilename,tdata,4
+//dialog outfilename
+//bsave outfilename,,,ocount
+//mes filesize
+
+if filesize==-1:mes"ファイルの指定が不正":end
+
+mes "\""+ filename+"\""
+
+a=0
+#enum global uselib=100
+#enum global efunc
+#enum global func
+#enum global var
+#enum global array
+#enum global svar
+#enum global sarray
+#enum global gotrue
+#enum global gofalse
+#enum global goto_
+#enum global return_
+
+
+/*
+enum
+{
+	eof=0,		//00
+	DLL,		//01
+	efunc,		//02
+	ecall,		//03
+	ptrefunc,	//04
+	label,		//05
+	jmp,		//06
+	jmpcc,		//07
+	func,		//08
+	ptrfunc,	//09
+	call,		//0A
+	code,		//0B
+	data,		//0C
+	gvarini,	//0D
+	ptrgvar,	//0E
+	mode
+};
+
+
+
+
+
+uselib "aaa"
+efunc aaa
+func ( a b c )func
+var a
+svar n
+main::n
+array 100 b
+( 0 "asdfasd")print;
+
+$a
+@ //expand
+@@ //call
+
+0x000ff
+
+:asdfasdfas
+gotrue :afasd ;
+gofalse :adfasdf ;
+goto :asdfasd ;
+
+return 
+
+*/
+
+count=0
+seq=0//シーケンス番号
+prc=0//工程
+
+
+sdim efuncs,256
+sdim funcs,256
+efcunsc_cnt=0
+fcunsc_cnt=0
+sdim svar_name,256,1
+sdim svar_lname,256,1
+svar_count=0
+
+
+
+
+premain
+count=0
+main
+
+mes "OK..."
+mes outfilename
+//wait 50
+exec "cmd.exe /K \"llc "+outfilename+"\""
+stop
+
+#define global kaki_l(%1) tdata=(%1):bsave outfilename@,tdata,4,ocount@:ocount@+=4
+#define global kaki_c(%1) tdata=(%1):bsave outfilename@,tdata,1,ocount@:ocount@+=1
+#define global kaki_s(%1) tdata=(%1):bsave outfilename@,tdata,2,ocount@:ocount@+=2
+#define global kaki_str(%1) tdata=(%1):bsave outfilename@,tdata,strlen(tdata)+1,ocount@:ocount@+=strlen(tdata)+1
+
+#define global yomi	if(count@>=filesize@){_break}:bload filename@,data,1,count@:if(count@+1>=filesize@){data2=0x20}else{bload filename@,data2,1,count@+1}
+
+//premain--/////////////////////////
+#module
+#deffunc premain
+
+
+
+
+while 1
+	if count@>=filesize@:_break
+	bload filename@,data,1,count@
+	if count@+1>=filesize@{//先読みする
+		data2=0x20
+	}else{
+		bload filename@,data2,1,count@+1
+	}
+	 
+	//mes strf(".%c ",data)+strf("%02X",data)+"."+ strf("%02X",data2)
+	//mes strf("%c",data)
+	
+	//	mes strf(".%c ",data)+"."+ strf("%c",data2)
+	
+	while 1
+	
+
+
+		if(data='_'|| azAZ(data) ){
+			//count@+=2
+			presimbol
+			
+			_break
+		}
+
+		
+		
+		if(data='0'&& (data2='x'|data2='X') ){
+			count@+=2
+			 hex 
+			_break
+		}
+		if(zn(data)){
+			//count@++
+			 dec 
+			_break
+		}
+		if(data='\''){
+			count@++
+			 cha
+			_break
+		}
+		
+		if(data='\"'){
+			count@++
+
+			string
+
+
+			_break
+		}
+		
+		if(data=' '||data='\t'||data=0x0A||data=0x0D){
+			count@+
+			_break
+		}
+		
+		//if(data=':'&&data2=':' ){
+			//count@+=2
+			// hex 
+		//	_break
+		//}
+ 		if(data='='&&data2='=' ){
+			count@+=2
+
+			_break
+		}
+		if(data='!'&&data2='=' ){
+			count@+=2
+
+			_break
+		}
+		if(data='<'&&data2='=' ){
+			count@+=2
+			_break
+		}
+		if(data='>'&&data2='=' ){
+			count@+=2
+			_break
+		}
+		if(data='&'&&data2='&' ){
+			count@+=2
+			// hex 
+			_break
+		}
+		if(data='|'&&data2='|' ){
+			count@+=2
+			 //hex 
+			_break
+		}
+		if(data='+'&&data2='+' ){
+			count@+=2
+			// hex 
+			_break
+		}
+		if(data='-'&&data2='-' ){
+			count@+=2
+			 //hex 
+			_break
+		}
+		if(data='<'&&data2='<' ){
+			count@+=2
+			// hex 
+			_break
+		}
+		if(data='>'&&data2='>' ){
+			count@+=2
+			// hex 
+			_break
+		}
+		if(data='@'&&data2='@' ){
+			count@+=2
+			 //hex 
+			_break
+		}
+		if(data='<' ){
+			count@++
+			_break
+		}
+		if(data='>' ){
+
+			count@++
+
+			_break
+		}
+		if(data=':' ){
+			count@++
+
+			wwss 
+			simbol2
+			if retstr@="*"{
+				mes "構文エラー"
+				error
+			}
+			
+			_break
+		}
+		if(data=';' ){
+			count@++
+
+			_break
+		}
+		if(data='+' ){
+			count@++
+
+			_break
+		}
+		if(data='-' ){
+			count@++
+			 //hex 
+			_break
+		}
+		if(data='*' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='/' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='%' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='!' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='$' ){
+			//ポインタ
+
+			
+			
+			count@++
+			// hex 
+			_break
+		}
+		if(data='@' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='&' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='|' ){
+			count@++
+			 //hex 
+			_break
+		}
+		if(data='^' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data='~' ){
+			count@++
+			 //hex 
+			_break
+		}
+		if(data='=' ){
+			//代入
+			
+			
+			count@++
+			// hex 
+			_break
+		}
+		if(data='(' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data=')' ){
+			count@++
+			 //hex 
+			_break
+		}
+
+		
+		
+		count@+
+		_break
+	wend
+	
+	
+wend
+
+
+
+					
+return
+#global
+
+//--premain/////////////////////////
+
+//presimbol--///////////////////////
+
+#module
+#deffunc presimbol
+
+dd=""
+while 1
+	yomi
+	while 1
+		if(data='_'|| azAZ(data)|| zn(data) ){
+			dd+=strf("%c",data)
+			count@+
+			_break
+		}
+//		mes "sbl "+dd
+
+		while 1
+			if dd=="uselib"{
+				wwss
+				//error
+				if hito('\"')==0{
+					mes "構文エラー"
+					error
+				}
+				string
+
+				
+				_break
+			}
+			if dd=="efunc"{
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				
+				_break
+			}
+			if dd=="func"{
+				wwss
+				if hito('(')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				while 1
+					simbol2
+					if retstr@="*"{
+						mes "構文エラー"
+						error
+					}
+					if retstr@!="-"&&retstr@!="*"{
+					}
+					wwss
+					
+					if hito(')')==1{
+						_break
+					}
+					
+					
+				wend
+				
+				wwss
+				simbol2
+				if retstr@!="-"&&retstr@!="*"{
+
+					funcs@(funcs_cnt@)=retstr@
+					
+					funcs_cnt@++
+					
+				}else{
+					mes "構文エラー"
+					error
+				}
+				_break
+			}
+			
+			if dd=="var"{
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				
+				_break
+			}
+			if dd=="array"{
+				wwss
+				yomi
+				while 1
+					if(data='0'&& (data2='x'|data2='X') ){
+						count@+=2
+						 hex 
+						_break
+					}
+					if(zn(data)){
+						//count@++
+						 dec 
+						_break
+					}
+					if(data='\''){
+						count@++
+						 cha
+						_break
+					}
+					mes "構文エラー"
+
+					error
+					
+					_break
+				wend
+
+				if retnum@==0{
+					mes "構文エラー"
+					error
+				}
+
+
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				
+				_break
+			}
+			if dd=="svar"{
+				_break
+			}
+			if dd=="sarray"{
+				_break
+			}
+			if dd=="gotrue"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				_break
+			
+			}
+			if dd=="gofalse"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+
+				_break
+			}
+			if dd=="goto"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+
+				_break
+			}
+			if dd=="return"{					
+				_break
+			}
+			f_d=0
+			_break
+		wend
+		
+		return
+		_break
+	wend
+wend
+return
+#global
+//--presimbol//////////////////
+
+#module
+#deffunc main
+
+
+
+
+while 1
+	if count@>=filesize@:_break
+	bload filename@,data,1,count@
+	if count@+1>=filesize@{//先読みする
+		data2=0x20
+	}else{
+		bload filename@,data2,1,count@+1
+	}
+	 
+	//mes strf(".%c ",data)+strf("%02X",data)+"."+ strf("%02X",data2)
+	//mes strf("%c",data)
+	//	mes strf(".%c ",data)+"."+ strf("%c",data2)
+	
+	while 1
+	
+
+
+		if(data='_'|| azAZ(data) ){
+			//count@+=2
+			simbol
+			
+			_break
+		}
+
+		
+		
+		if(data='0'&& (data2='x'|data2='X') ){
+			count@+=2
+			 hex 
+			 kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x68
+			kaki_l retnum@
+			_break
+		}
+		if(zn(data)){
+			//count@++
+			 dec 
+			  kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x68
+			kaki_l retnum@
+			_break
+		}
+		if(data='\''){
+			count@++
+			 cha
+			  kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x68
+			kaki_l retnum@
+			_break
+		}
+		
+		if(data='\"'){
+			count@++
+			//mes "sdfgsfgsdfgd"
+			string
+			
+			kaki_l 0x0B//code
+
+			kaki_l 0x01
+
+			kaki_c 0x68
+
+			kaki_l 0x0C //data
+
+			kaki_l strlen(retstr@)+1
+
+			kaki_str retstr@
+
+			_break
+		}
+		
+		if(data=' '||data='\t'||data=0x0A||data=0x0D){
+			count@+
+			_break
+		}
+		
+		//if(data=':'&&data2=':' ){
+			//count@+=2
+			// hex 
+		//	_break
+		//}
+ 		if(data='='&&data2='=' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x94:kaki_c 0xC2
+			
+			kaki_c 0x52
+			// hex 
+			_break
+		}
+		if(data='!'&&data2='=' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x95:kaki_c 0xC2
+			
+			kaki_c 0x52
+			// hex 
+			_break
+		}
+		if(data='<'&&data2='=' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x9E:kaki_c 0xC2
+			
+			kaki_c 0x52
+			
+			 //hex 
+			_break
+		}
+		if(data='>'&&data2='=' ){
+			count@+=2
+
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x9D:kaki_c 0xC2
+			
+			kaki_c 0x52
+			 //hex 
+			_break
+		}
+		if(data='&'&&data2='&' ){
+			count@+=2
+
+			kaki_l 0x0B//code
+
+			kaki_l 25
+
+			kaki_c 0x58//push EAX
+
+			kaki_c 0x31:kaki_c 0xC9 //XOR ECX,ECX
+			kaki_c 0x3D:kaki_l 0x00000000
+			
+			kaki_c 0x0F:kaki_c 0x95:kaki_c 0xC1//ecx
+			
+
+			kaki_c 0x58//push EAX
+
+			kaki_c 0x31:kaki_c 0xD2 //XOR EDX,EDX
+			kaki_c 0x3D:kaki_l 0x00000000
+			
+			kaki_c 0x0F:kaki_c 0x95:kaki_c 0xC2//edx
+
+
+
+			//kaki_c 0x31:kaki_c 0xDB//XOR EBX,EBX
+			//kaki_c 0x3B:kaki_c 0xD1
+			
+			//kaki_c 0x0F:kaki_c 0x94:kaki_c 0xC3
+			
+			//kaki_c 0x53
+
+			kaki_c 0x23:kaki_c 0xD1
+			kaki_c 0x52
+			
+			// hex 
+			_break
+		}
+		if(data='|'&&data2='|' ){
+			count@+=2
+			
+			kaki_l 0x0B//code
+
+			kaki_l 25
+
+			kaki_c 0x58//push EAX
+
+			kaki_c 0x31:kaki_c 0xC9 //XOR ECX,ECX
+			kaki_c 0x3D:kaki_l 0x00000000
+			
+			kaki_c 0x0F:kaki_c 0x95:kaki_c 0xC1//ecx
+			
+
+			kaki_c 0x58//push EAX
+
+			kaki_c 0x31:kaki_c 0xD2 //XOR EDX,EDX
+			kaki_c 0x3D:kaki_l 0x00000000
+			
+			kaki_c 0x0F:kaki_c 0x95:kaki_c 0xC2//edx
+
+
+
+			//kaki_c 0x31:kaki_c 0xDB//XOR EBX,EBX
+			//kaki_c 0x3B:kaki_c 0xD1
+			
+			//kaki_c 0x0F:kaki_c 0x94:kaki_c 0xC3
+			
+			//kaki_c 0x53
+
+			kaki_c 0x0B:kaki_c 0xD1
+			kaki_c 0x52
+			 //hex 
+			_break
+		}
+		if(data='+'&&data2='+' ){
+			count@+=2
+
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			//kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xff:kaki_c 0x00//inc
+			
+			//kaki_c 0x50
+			kaki_c 0xff:kaki_c 0x30//push
+			
+			// hex 
+			_break
+		}
+		if(data='-'&&data2='-' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			//kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xff:kaki_c 0x08//inc
+			
+			//kaki_c 0x50
+			kaki_c 0xff:kaki_c 0x30//push
+			 //hex 
+			_break
+		}
+		if(data='<'&&data2='<' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xD3:kaki_c 0xE0
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='>'&&data2='>' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xD3:kaki_c 0xF8
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='@'&&data2='@' ){
+			count@+=2
+			kaki_l 0x0B//code
+
+			kaki_l 0x04
+
+			//kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xFF:kaki_c 0xD0
+			
+			kaki_c 0x50
+			
+			 //hex 
+			_break
+		}
+		if(data='/'&&data2='/' ){
+			count@+=2
+			f_come=0
+			while 1
+				yomi
+				while 1
+					if(data=0x0A||data=0x0D ){
+						if __data='_':mes strf("%c",_data)
+						f_come=1
+						_break
+						
+					}
+					__data=_data
+					_data=data
+					
+					count@+
+					_break
+				wend
+				if f_come=1:_break
+			wend
+			 //hex 
+			_break
+		}
+		if(data='<' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x9C:kaki_c 0xC2
+			
+			kaki_c 0x52
+			// hex 
+			_break
+		}
+		if(data='>' ){
+			kaki_l 0x0B//code
+
+			kaki_l 0x0A
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			kaki_c 0x3B:kaki_c 0xC1
+			
+			kaki_c 0x0F:kaki_c 0x9F:kaki_c 0xC2
+			
+			kaki_c 0x52
+			count@++
+			// hex 
+			_break
+		}
+		if(data=':' ){
+			count@++
+
+			wwss 
+			simbol2
+			if retstr@="*"{
+				mes "構文エラー"
+				error
+			}
+			
+			kaki_l 0x05//code
+
+			kaki_l strlen(retstr@)+1
+
+			kaki_str retstr@
+			// hex 
+			_break
+		}
+		if(data=';' ){
+			count@++
+			 //hex 
+			 kaki_l 0x0B//code
+
+			kaki_l 0x01
+
+			kaki_c 0x58
+			_break
+		}
+		if(data='+' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x03:kaki_c 0xC1
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='-' ){
+			if(zn(data2)){
+				count@+
+				yomi
+				while 1
+					if(data='0'&& (data2='x'|data2='X') ){
+						count@+=2
+						 hex 
+						 kaki_l 0x0B//code
+			
+						kaki_l 0x05
+			
+						kaki_c 0x68
+						kaki_l retnum@*(-1)
+						_break
+					}
+					if(zn(data)){
+						//count@++
+						 dec 
+						  kaki_l 0x0B//code
+			
+						kaki_l 0x05
+			
+						kaki_c 0x68
+						kaki_l retnum@*(-1)
+						_break
+					}
+					_break
+				wend
+			}else{
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x2B:kaki_c 0xC1
+			
+			kaki_c 0x50
+			}
+			 //hex 
+			_break
+		}
+		if(data='*' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x06
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x0F:kaki_c 0xAF:kaki_c 0xC1
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='/' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x07
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			
+			kaki_c 0xF7:kaki_c 0xF9
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='%' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x07
+
+			kaki_c 0x59
+			kaki_c 0x58
+
+			kaki_c 0x31:kaki_c 0xD2
+			
+			kaki_c 0xF7:kaki_c 0xF9
+			
+			kaki_c 0x52
+			// hex 
+			_break
+		}
+		if(data='!' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x0C
+
+			//kaki_c 0x59
+			kaki_c 0x58//push EAX
+
+			kaki_c 0x31:kaki_c 0xD2 //XOR EDX,EDX
+			kaki_c 0x3D:kaki_l 0x00000000
+			
+			kaki_c 0x0F:kaki_c 0x94:kaki_c 0xC2
+			
+			kaki_c 0x52
+			// hex 
+			_break
+		}
+		if(data='@' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x03
+
+			//kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xff
+			kaki_c 0x30
+			
+			// hex 
+			_break
+		}
+		if(data='$' ){
+			count@++
+			simbol2
+			dd=retstr@
+			f_d=0
+//			dialog "----"+dd
+			while 1
+				wwss
+				yomi
+				if(data=':'&&data2=':' ){
+					count@+=2
+					wwss
+					simbol2
+					if retstr@="*"{
+						mes "構文エラー"
+						error
+					}
+					dd_=""+dd+"::"+retstr@
+					kaki_l 0x0B//code
+					kaki_l 0x01
+
+					kaki_c 0x68 // 0xFFB6
+					
+					kaki_l 0x0E//call
+					kaki_l strlen(dd_)+1
+					kaki_str dd_
+					_break
+				}
+				repeat efuncs_cnt@
+					if efuncs@(cnt)==dd{
+						f_d=1
+						//dialog "efunc----"+dd
+						kaki_l 0x0B//code
+						kaki_l 0x01
+
+						kaki_c 0x68
+						
+						kaki_l 0x04//ecall
+						kaki_l strlen(dd)+1
+						
+						kaki_str dd
+						
+						break
+					
+					}
+				loop
+				if f_d:_break
+				
+				repeat funcs_cnt@
+					if funcs@(cnt)==dd{
+						f_d=1
+						//dialog "func----"+dd
+						kaki_l 0x0B//code
+						kaki_l 0x01
+
+						kaki_c 0x68
+						
+						kaki_l 0x09//ecall
+						kaki_l strlen(dd)+1
+						
+						kaki_str dd
+						
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(sfvar_name@)
+				
+					if sfvar_name@(cnt)==dd{
+						f_d=1
+						kaki_l 0x0B//code
+						kaki_l 0x01
+
+						kaki_c 0x68 // 0xFFB6
+						
+						kaki_l 0x0E//call
+						dd_=""+curfunc@+"::"+dd
+						kaki_l strlen(dd_)+1
+						kaki_str dd_
+						//dialog "aaa"
+
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(arg_name@)
+					if arg_name@(cnt)==dd{
+						f_d=1
+						//dialog "arg----"+dd
+						kaki_l 0x0B//code
+						kaki_l 0x07
+
+
+						kaki_c 0x8D // 0xFFB6
+						kaki_c 0x85 // 0xFFB6
+						kaki_l arg_pos@(cnt)
+
+						kaki_c 0x50
+						
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(var_name@)
+					if var_name@(cnt)==dd{
+						f_d=1
+						//dialog "var----"+dd
+
+						kaki_l 0x0B//code
+						kaki_l 0x07
+
+
+						kaki_c 0x8D // 0xFFB6
+						kaki_c 0x85 // 0xFFB6
+						//mes dd
+						kaki_l var_pos@(cnt)
+						
+
+						kaki_c 0x50
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(svar_name@)
+				
+					if svar_name@(cnt)==dd{
+						
+						f_d=1
+						kaki_l 0x0B//code
+						kaki_l 0x01
+
+						kaki_c 0x68 // 0xFFB6
+						
+						kaki_l 0x0E//call
+						dd_=svar_lname@(cnt)
+						//dialog dd_
+						kaki_l strlen(dd_)+1
+						kaki_str dd_
+						//dialog "aaa"
+
+						break
+					}
+				loop
+				if f_d:_break
+
+				
+				mes "不明なシンボル "+dd
+				error
+				_break
+			wend
+
+			// hex 
+			_break
+		}
+		if(data='&' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x23:kaki_c 0xC1
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='|' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x0B:kaki_c 0xC1
+			
+			kaki_c 0x50
+			 //hex 
+			_break
+		}
+		if(data='^' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x33:kaki_c 0xC1
+			
+			kaki_c 0x50
+			// hex 
+			_break
+		}
+		if(data='~' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x04
+
+			//kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0xF7:kaki_c 0xD8
+			
+			kaki_c 0x50
+			 //hex 
+			_break
+		}
+		if(data='=' ){
+			count@++
+			kaki_l 0x0B//code
+
+			kaki_l 0x05
+
+			kaki_c 0x59
+			kaki_c 0x58
+			
+			kaki_c 0x89:kaki_c 0x08
+			
+			kaki_c 0x50
+			_break
+		}
+		if(data='(' ){
+			count@++
+			// hex 
+			_break
+		}
+		if(data=')' ){
+			count@++
+			 //hex 
+			_break
+		}
+
+		
+		
+		count@+
+		_break
+	wend
+	
+	
+wend
+
+
+tdata=00
+bsave outfilename@,tdata,4,ocount@
+ocount@+=4
+
+					
+return
+#global
+
+#module
+#deffunc hex 
+f=0
+dd=0
+retnum@=0
+while 1
+	yomi
+	while 1
+		if( afAF(data) ){
+			dd=dd*16
+			dd+=afAF2d(data)
+			count@+
+			f=1
+			_break
+		}
+		if( zn(data) ){
+			dd=dd*16
+			dd+=data-'0'
+			count@+
+			f=1
+			_break
+		}
+		//if( data=' '||data='\t'||data=0x0A||data=0x0D ){
+		//	count@+
+		//	_break
+		//}
+		if f=0{
+			mes "構文エラー"
+			error
+			return
+		}
+//		mes "hex "+dd
+		//count@+
+		retnum@=dd
+		return
+		_break
+	wend
+wend
+return
+#global
+
+
+#module
+#deffunc dec
+
+dd=0
+retnum@=0
+while 1
+	yomi
+	while 1
+		if( zn(data) ){
+			dd=dd*10
+			dd+=data-'0'
+			count@+
+			_break
+		}
+//		mes "dec "+dd
+		//count@+
+		retnum@=dd
+		return
+		_break
+	wend
+wend
+return
+#global
+
+
+#module
+#deffunc simbol
+
+dd=""
+while 1
+	yomi
+	while 1
+		if(data='_'|| azAZ(data)|| zn(data) ){
+			dd+=strf("%c",data)
+			count@+
+			_break
+		}
+//		mes "sbl "+dd
+
+		while 1
+			if dd=="uselib"{
+				wwss
+				//error
+				if hito('\"')==0{
+					mes "構文エラー"
+					error
+				}
+				string
+				kaki_l 0x01//code
+				kaki_l strlen(retstr@)+1
+				kaki_str retstr@
+				
+				_break
+			}
+			if dd=="efunc"{
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				kaki_l 0x02//code
+				kaki_l strlen(retstr@)+1
+				kaki_str retstr@
+				efuncs@(efuncs_cnt@)=retstr@
+				efuncs_cnt@++
+				
+				_break
+			}
+			if dd=="func"{
+				sdim arg_name@,256,1
+				dim  arg_pos@, 1
+				sdim var_name@,256,1
+				dim  var_pos@, 1
+				sdim sfvar_name@,256,1
+				var_count@=0
+				var_count2@=0
+				arg_count@=0
+				sfvar_count@=0
+				wwss
+				if hito('(')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				while 1
+					simbol2
+					if retstr@="*"{
+						mes "構文エラー"
+						error
+					}
+					//retstr@='-'
+					
+					
+					
+					if (retstr@!="-")&&(retstr@!="*"){
+						//dialog retstr@
+						arg_name@(arg_count@)=retstr@
+						arg_pos@(arg_count@)= -arg_count@*4
+						arg_count@++
+						//dialog "b:"+retstr@+":"
+					}
+
+					if hito(')')==1{
+						//dialog "a"
+						_break
+					}
+					
+					wwss
+				wend
+
+				arg_count@--
+				
+				repeat arg_count@+1
+					arg_pos@(cnt)= arg_pos@(cnt) +arg_count@*4+8
+				loop
+				//repeat arg_count@+1
+					//dialog arg_name(cnt)+":"+arg_pos(cnt)
+				//loop
+
+				
+				wwss
+				simbol2
+				if retstr@!="-"&&retstr@!="*"{
+
+					funcs@(funcs_cnt@)=retstr@
+					funcs_cnt@++
+					
+					curFunc@=retstr@
+					curFuncPos@=0
+					tdata=08//func
+					bsave outfilename@,tdata,4,ocount@
+					ocount@+=4
+					tdata=strlen(curFunc@)+1
+					bsave outfilename@,tdata,4,ocount@
+					ocount@+=4
+					
+					bsave outfilename@,curFunc@,strlen(curFunc@),ocount@
+					ocount@+=strlen(curFunc@)+1
+
+					kaki_l 0x0B
+
+					kaki_l 0x09
+
+					kaki_c 0x55
+					kaki_s 0xEC8B //0x8BEC
+					kaki_s 0xC481//0x81C4
+					
+					curFuncPos@=ocount@
+					kaki_l 0x00000000
+					
+
+					
+/*
+55               PUSH    EBP
+8BEC             MOV     EBP,ESP
+83C4 F0          ADD     ESP,-10h
+
+8BE5             MOV     ESP,EBP
+5D               POP     EBP
+C2 1000          RET     0010h
+
+*/
+					
+					//dialog retstr@
+				}else{
+					mes "構文エラー"
+					error
+				}
+				_break
+			}
+			if dd=="var"{
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				//dialog retstr@
+				var_name@(var_count2@)=retstr@
+				var_pos@(var_count2@)=-var_count@*4-4
+				var_count@++
+				var_count2@++
+				
+				tmp=ocount@
+					ocount@=curFuncPos@
+					kaki_l -(var_count@)*4
+				ocount@=tmp
+				
+				_break
+			}
+			if dd=="array"{
+				wwss
+				yomi
+				while 1
+					if(data='0'&& (data2='x'|data2='X') ){
+						count@+=2
+						 hex 
+						_break
+					}
+					if(zn(data)){
+						//count@++
+						 dec 
+						_break
+					}
+					if(data='\''){
+						count@++
+						 cha
+						_break
+					}
+					mes "構文エラー"
+
+					error
+					
+					_break
+				wend
+
+				if retnum@==0{
+					mes "構文エラー"
+					error
+				}
+				//dialog retnum@
+				arraysize=retnum@
+wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+
+				//dialog retstr@
+				var_name@(var_count2@)=retstr@
+				
+				var_count@+=arraysize
+				var_pos@(var_count2@)=-var_count@*4
+				var_count2@++
+				
+				tmp=ocount@
+					ocount@=curFuncPos@
+					kaki_l -(var_count@)*4
+				ocount@=tmp
+				
+				_break
+			}
+			if dd=="svar"{
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				//dialog retstr@
+				sfvar_name@(sfvar_count@)=retstr@
+				sfvar_count@++
+				svar_name@(svar_count@)=retstr@
+				svar_lname@(svar_count@)=""+curFunc@+"::"+retstr@
+				svar_count@++
+
+				kaki_l 0x0D//jmpcc
+
+				//kaki_l 0x85
+
+				retstr_=""+curFunc@+"::"+retstr@
+				kaki_l strlen(retstr_)+1
+
+				kaki_str retstr_
+				
+				kaki_l 0x4//code
+	
+				kaki_l 0x4//code
+				kaki_l 0x0//code
+				
+				//svar_name@(svar_coun2@)=curFunc@+"::"+retstr@
+				//svar_count@++
+
+				//dialog sfvar_name@(sfvar_count@-1)
+				////dialog svar_name@(svar_count@-1)
+				
+				tmp=ocount@
+					ocount@=curFuncPos@
+					kaki_l -(var_count@)*4
+				ocount@=tmp
+				
+				_break
+			}
+			if dd=="sarray"{
+				wwss
+				yomi
+				while 1
+					if(data='0'&& (data2='x'|data2='X') ){
+						count@+=2
+						 hex 
+						_break
+					}
+					if(zn(data)){
+						//count@++
+						 dec 
+						_break
+					}
+					if(data='\''){
+						count@++
+						 cha
+						_break
+					}
+					mes "構文エラー"
+
+					error
+					
+					_break
+				wend
+
+				if retnum@==0{
+					mes "構文エラー"
+					error
+				}
+				//dialog retnum@
+				arraysize=retnum@
+wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+			
+				sfvar_name@(sfvar_count@)=retstr@
+				sfvar_count@++
+				svar_name@(svar_count@)=retstr@
+				svar_lname@(svar_count@)=""+curFunc@+"::"+retstr@
+				svar_count@++
+
+				kaki_l 0x0D//jmpcc
+
+				//kaki_l 0x85
+
+				retstr_=""+curFunc@+"::"+retstr@
+				kaki_l strlen(retstr_)+1
+
+				kaki_str retstr_
+				
+				kaki_l arraysize//code
+	
+				kaki_l 0x4//code
+			
+				kaki_l 0x0//code
+				
+				
+				_break
+			}
+			if dd=="gotrue"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				kaki_l 0x0B//code
+	
+				kaki_l 0x09
+	
+				kaki_c 0x59
+				kaki_c 0xC7
+				kaki_c 0xC0
+				kaki_l 0x00000000
+	
+				kaki_c 0x3B:kaki_c 0xC1
+				//kaki_c 0x0F:kaki_c 0x85
+	
+				kaki_l 0x07//jmpcc
+
+				kaki_l 0x85
+	
+				kaki_l strlen(retstr@)+1
+
+				kaki_str retstr@
+				
+				kaki_l 0x0B//code
+	
+				kaki_l 0x01
+				kaki_c 0x51
+				_break
+			
+			}
+			if dd=="gofalse"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				kaki_l 0x0B//code
+	
+				kaki_l 0x09
+	
+				kaki_c 0x59
+				kaki_c 0xC7
+				kaki_c 0xC0
+				kaki_l 0x00000000
+	
+				kaki_c 0x3B:kaki_c 0xC1
+				//kaki_c 0x0F:kaki_c 0x85
+	
+				kaki_l 0x07//jmpcc
+
+				kaki_l 0x84
+	
+				kaki_l strlen(retstr@)+1
+
+				kaki_str retstr@
+				
+				kaki_l 0x0B//code
+	
+				kaki_l 0x01
+				kaki_c 0x51
+				_break
+				_break
+			}
+			if dd=="goto"{
+				wwss
+				if hito(':')==0{
+					mes "構文エラー"
+					error
+				}
+				wwss
+				simbol2
+				if retstr@="*"{
+					mes "構文エラー"
+					error
+				}
+				kaki_l 0x06//code
+
+				kaki_l strlen(retstr@)+1
+
+				kaki_str retstr@
+				_break
+			}
+			if dd=="return"{					
+				kaki_l 0x0B//code
+				kaki_l 0x07
+
+				kaki_c 0x58
+				kaki_s 0xE58B //0x8BE5
+				kaki_c 0x5D
+				kaki_c 0xC2
+				kaki_s (arg_count@+1)*4
+				_break
+			}
+			f_d=0
+//			dialog "----"+dd
+			while 1
+			
+				wwss
+				yomi
+				if(data=':'&&data2=':' ){
+					count@+=2
+					wwss
+					simbol2
+					if retstr@="*"{
+						mes "構文エラー"
+						error
+					}
+					dd_=""+dd+"::"+retstr@
+					kaki_l 0x0B//code
+					kaki_l 0x02
+
+					kaki_s 0x35FF // 0xFFB6
+					
+					kaki_l 0x0E//call
+					//dd_=""+curfunc@+"::"+dd
+					kaki_l strlen(dd_)+1
+					kaki_str dd_
+					_break
+				}
+				
+				repeat efuncs_cnt@
+					if efuncs@(cnt)==dd{
+						f_d=1
+						//dialog "efunc----"+dd
+						kaki_l 0x03//ecall
+						kaki_l strlen(dd)+1
+						kaki_str dd
+
+						kaki_l 0x0B//code
+	
+						kaki_l 0x01
+						kaki_c 0x50
+						break
+					
+					}
+				loop
+				if f_d:_break
+				
+				repeat funcs_cnt@
+					if funcs@(cnt)==dd{
+						f_d=1
+						//dialog "func----"+dd
+						kaki_l 0x0A//call
+						kaki_l strlen(dd)+1
+						kaki_str dd
+
+						kaki_l 0x0B//code
+	
+						kaki_l 0x01
+						kaki_c 0x50
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(sfvar_name@)
+
+			//	sfvar_name@(sfvar_count@)=retstr@
+			//	sfvar_count@++
+				
+					if sfvar_name@(cnt)==dd{
+						f_d=1
+						kaki_l 0x0B//code
+						kaki_l 0x02
+
+						kaki_s 0x35FF // 0xFFB6
+						
+						kaki_l 0x0E//call
+						dd_=""+curfunc@+"::"+dd
+						kaki_l strlen(dd_)+1
+						kaki_str dd_
+						//dialog "aaa"
+
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(arg_name@)
+					if arg_name@(cnt)==dd{
+						f_d=1
+						//dialog "arg----"+dd
+						kaki_l 0x0B//code
+						kaki_l 0x06
+
+						kaki_s 0xB5FF // 0xFFB6
+						kaki_l arg_pos@(cnt)
+						break
+					}
+				loop
+				if f_d:_break
+
+				repeat length(var_name@)
+					if var_name@(cnt)==dd{
+						f_d=1
+						//dialog "var----"+dd
+
+						kaki_l 0x0B//code
+						kaki_l 0x06
+
+						kaki_s 0xB5FF // 0xFFB6
+						kaki_l var_pos@(cnt)
+						break
+					}
+				loop
+				if f_d:_break
+
+				
+				repeat length(svar_name@)
+				
+					if svar_name@(cnt)==dd{
+						f_d=1
+						kaki_l 0x0B//code
+						kaki_l 0x02
+
+						kaki_s 0x35FF // 0xFFB6
+						
+						kaki_l 0x0E//call
+						dd_=svar_lname@(cnt)
+						//dialog dd_
+						kaki_l strlen(dd_)+1
+						kaki_str dd_
+						//dialog "aaa"
+
+						break
+					}
+				loop
+				if f_d:_break
+				mes "不明なシンボル "+dd
+				error
+				
+				_break
+			wend
+			_break
+		wend
+		
+		return
+		_break
+	wend
+wend
+return
+#global
+
+#module
+#deffunc simbol2
+
+dd=""
+retstr@="-"
+while 1
+	yomi
+	while 1
+		if(data='_'|| azAZ(data)|| zn(data) ){
+			//retstr@="-"
+			dd+=strf("%c",data)
+			count@+
+			_break
+		}
+//		mes "sbl "+dd
+		
+		while 1
+			if dd=="uselib"{
+				retstr@="*"
+				_break
+			}
+			if dd=="efunc"{
+				retstr@="*"
+				_break
+			}
+			if dd=="func"{
+				retstr@="*"
+				_break
+			}
+			if dd=="var"{
+				retstr@="*"
+				_break
+			}
+			if dd=="array"{
+				retstr@="*"
+				_break
+			}
+			if dd=="svar"{
+				_break
+			}
+			if dd=="sarray"{
+				_break
+			}
+			if dd=="gotrue"{
+				retstr@="*"
+				_break
+			}
+			if dd=="gofalse"{
+				retstr@="*"
+				_break
+			}
+			if dd=="goto"{
+				retstr@="*"
+			}
+			if dd=="return"{
+				retstr@="*"
+				_break
+			}
+			if dd!=""{
+				retstr@=dd
+				//dialog DD
+			}
+			_break
+		wend
+		return
+		_break
+	wend
+wend
+return
+#global
+
+
+#module
+
+#deffunc string
+
+dd=""
+while 1
+	yomi
+	while 1
+		//dialog IsDBCSLeadByteEx(0,data)
+		if(data='\\' && data2='\\'){
+			dd+="\\"
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\"'){
+			dd+="\\"
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\''){
+			dd+="\\"
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='t'){
+			dd+="\t"
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='r'){
+			dd+=strf("%c",0x0D)
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='n'){
+			dd+=strf("%c",0x0D)+strf("%c",0x0A)
+			count@+=2
+			_break
+		}
+		if(data='\\' ){
+			dd+="\\"
+			count@+=1
+			_break
+		}
+		if(data='\"' ){
+//			mes "str "+dd
+			retstr@=dd
+			count@+=1
+			return
+		}
+		if(data=0x0A||data=0x0D ){
+			count@+=1
+			_break
+		}
+		
+		dd+=strf("%c",data)
+		count@+=1
+		//return
+		_break
+	wend
+wend
+
+return
+#global
+
+#module
+#deffunc cha
+
+dd=0
+retnum@=0
+while 1
+	yomi
+	while 1
+		if(data='\\' && data2='\\'){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\"'){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\''){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\t'){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\r'){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' && data2='\n'){
+			dd*=256
+			dd+=data
+			count@+=2
+			_break
+		}
+		if(data='\\' ){
+			dd*=256
+			dd+=data
+			count@+=1
+			_break
+		}
+		if(data='\'' ){
+//			mes "cha "+dd
+			count@+=1
+			return
+		}
+		if(data=0x0A||data=0x0D ){
+			count@+=1
+			_break
+		}
+		
+		dd*=256
+		dd+=data
+		count@+=1
+		//return
+		_break
+	wend
+wend
+retnum@=dd
+return
+#global
+
+
+#module
+#deffunc wwss
+while 1
+	yomi
+	while 1
+		if(data=' '||data='\t'||data=0x0A||data=0x0D){
+			count@+
+			_break
+		}
+		return
+		_break
+	wend
+wend
+return
+#global
+
+#module
+#defcfunc hito int a
+while 1
+	yomi
+	while 1
+		if(data=a){
+			count@+
+			return 1
+			_break
+		}
+		return 0
+		_break
+	wend
+wend
+return
+#global
+
+#module
+#deffunc error
+mes "終了します"
+
+//input a,,1
+//end
+stop
+return
+#global
+
